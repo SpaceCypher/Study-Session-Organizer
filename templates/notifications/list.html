@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - Study Session Organizer{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Notifications</h1>
+        <p class="text-gray-600 mt-2">Stay updated with your study sessions</p>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="bg-white rounded-lg shadow-sm mb-6">
+        <div class="border-b border-gray-200">
+            <nav class="flex -mb-px">
+                <button onclick="filterNotifications('all')" 
+                        class="filter-tab flex-1 py-4 px-1 text-center border-b-2 font-medium text-sm active"
+                        data-filter="all">
+                    All
+                    <span class="ml-2 bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs" id="count-all">0</span>
+                </button>
+                <button onclick="filterNotifications('unread')" 
+                        class="filter-tab flex-1 py-4 px-1 text-center border-b-2 font-medium text-sm"
+                        data-filter="unread">
+                    Unread
+                    <span class="ml-2 bg-teal-100 text-teal-600 py-0.5 px-2 rounded-full text-xs" id="count-unread">0</span>
+                </button>
+                <button onclick="filterNotifications('read')" 
+                        class="filter-tab flex-1 py-4 px-1 text-center border-b-2 font-medium text-sm"
+                        data-filter="read">
+                    Read
+                    <span class="ml-2 bg-gray-100 text-gray-600 py-0.5 px-2 rounded-full text-xs" id="count-read">0</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Notifications Container -->
+    <div id="notifications-list" class="space-y-4">
+        <!-- Loading skeleton -->
+        <div class="skeleton-loader">
+            <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+                <div class="animate-pulse flex space-x-4">
+                    <div class="rounded-full bg-gray-300 h-10 w-10"></div>
+                    <div class="flex-1 space-y-2 py-1">
+                        <div class="h-4 bg-gray-300 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-300 rounded w-1/2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="hidden text-center py-12">
+        <div class="text-gray-400 mb-4">
+            <i data-feather="bell-off" class="mx-auto" style="width: 64px; height: 64px;"></i>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
+        <p class="text-gray-600">You're all caught up!</p>
+    </div>
+</div>
+
+<script>
+let currentFilter = 'all';
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadNotifications();
+});
+
+/**
+ * Load notifications based on current filter
+ */
+async function loadNotifications() {
+    const container = document.getElementById('notifications-list');
+    const emptyState = document.getElementById('empty-state');
+    
+    try {
+        const data = await apiCall(`/notifications?filter=${currentFilter}`);
+        
+        // Hide skeleton loader
+        document.querySelector('.skeleton-loader')?.remove();
+        
+        if (data.data.length === 0) {
+            container.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            return;
+        }
+        
+        container.classList.remove('hidden');
+        emptyState.classList.add('hidden');
+        
+        // Update counts
+        updateCounts();
+        
+        // Render notifications
+        const notificationsHTML = data.data.map(notification => `
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition duration-200 ${!notification.read_status ? 'border-l-4 border-l-teal-500' : ''}">
+                <div class="p-4">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 rounded-full ${getNotificationBgColor(notification.notification_type)} flex items-center justify-center">
+                                <i data-feather="${getNotificationIcon(notification.notification_type)}" class="${getNotificationIconColor(notification.notification_type)} w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4 flex-1">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <p class="text-sm ${!notification.read_status ? 'font-semibold text-gray-900' : 'text-gray-700'}">
+                                        ${notification.message}
+                                    </p>
+                                    <div class="mt-1 flex items-center text-xs text-gray-500">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getNotificationTypeBadge(notification.notification_type)}">
+                                            ${notification.notification_type}
+                                        </span>
+                                        <span class="mx-2">•</span>
+                                        <span>${timeAgo(notification.sent_date)}</span>
+                                    </div>
+                                </div>
+                                ${!notification.read_status ? `
+                                    <button onclick="markAsRead(${notification.notification_id})" 
+                                            class="ml-4 text-teal-600 hover:text-teal-700 text-sm font-medium">
+                                        Mark as read
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        
+        container.innerHTML = notificationsHTML;
+        feather.replace();
+        
+    } catch (error) {
+        console.error('Failed to load notifications:', error);
+        container.innerHTML = `
+            <div class="text-center py-12 text-red-500">
+                <i data-feather="alert-circle" class="mx-auto mb-4" style="width: 48px; height: 48px;"></i>
+                <p class="text-lg font-medium">Failed to load notifications</p>
+                <button onclick="loadNotifications()" class="mt-4 text-teal-600 hover:text-teal-700 font-medium">
+                    Try again
+                </button>
+            </div>
+        `;
+        feather.replace();
+    }
+}
+
+/**
+ * Filter notifications by type
+ */
+function filterNotifications(filter) {
+    currentFilter = filter;
+    
+    // Update active tab
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        if (tab.dataset.filter === filter) {
+            tab.classList.add('active', 'border-teal-500', 'text-teal-600');
+            tab.classList.remove('border-transparent', 'text-gray-500');
+        } else {
+            tab.classList.remove('active', 'border-teal-500', 'text-teal-600');
+            tab.classList.add('border-transparent', 'text-gray-500');
+        }
+    });
+    
+    loadNotifications();
+}
+
+/**
+ * Mark notification as read
+ */
+async function markAsRead(notificationId) {
+    try {
+        await apiCall(`/notifications/${notificationId}/read`, 'PUT');
+        showToast('Notification marked as read', 'success');
+        loadNotifications();
+        
+        // Update notification count in navbar
+        if (window.updateNotificationCount) {
+            window.updateNotificationCount();
+        }
+    } catch (error) {
+        console.error('Failed to mark notification as read:', error);
+        showToast('Failed to mark notification as read', 'error');
+    }
+}
+
+/**
+ * Update notification counts
+ */
+async function updateCounts() {
+    try {
+        const allData = await apiCall('/notifications?filter=all');
+        const unreadData = await apiCall('/notifications?filter=unread');
+        const readData = await apiCall('/notifications?filter=read');
+        
+        document.getElementById('count-all').textContent = allData.data.length;
+        document.getElementById('count-unread').textContent = unreadData.data.length;
+        document.getElementById('count-read').textContent = readData.data.length;
+    } catch (error) {
+        console.error('Failed to update counts:', error);
+    }
+}
+
+/**
+ * Get notification type badge color
+ */
+function getNotificationTypeBadge(type) {
+    const badges = {
+        'Session Invite': 'bg-blue-100 text-blue-800',
+        'Reminder': 'bg-yellow-100 text-yellow-800',
+        'Cancellation': 'bg-red-100 text-red-800',
+        'Update': 'bg-purple-100 text-purple-800',
+        'Feedback Request': 'bg-green-100 text-green-800'
+    };
+    return badges[type] || 'bg-gray-100 text-gray-800';
+}
+
+/**
+ * Get notification background color
+ */
+function getNotificationBgColor(type) {
+    const colors = {
+        'Session Invite': 'bg-blue-100',
+        'Reminder': 'bg-yellow-100',
+        'Cancellation': 'bg-red-100',
+        'Update': 'bg-purple-100',
+        'Feedback Request': 'bg-green-100'
+    };
+    return colors[type] || 'bg-gray-100';
+}
+
+/**
+ * Get notification icon
+ */
+function getNotificationIcon(type) {
+    const icons = {
+        'Session Invite': 'mail',
+        'Reminder': 'bell',
+        'Cancellation': 'x-circle',
+        'Update': 'refresh-cw',
+        'Feedback Request': 'message-circle'
+    };
+    return icons[type] || 'bell';
+}
+
+/**
+ * Get notification icon color
+ */
+function getNotificationIconColor(type) {
+    const colors = {
+        'Session Invite': 'text-blue-600',
+        'Reminder': 'text-yellow-600',
+        'Cancellation': 'text-red-600',
+        'Update': 'text-purple-600',
+        'Feedback Request': 'text-green-600'
+    };
+    return colors[type] || 'text-gray-600';
+}
+</script>
+
+<style>
+.filter-tab {
+    border-color: transparent;
+    color: #6b7280;
+    transition: all 0.2s;
+}
+
+.filter-tab:hover {
+    color: #14b8a6;
+    border-color: #14b8a6;
+}
+
+.filter-tab.active {
+    border-color: #14b8a6;
+    color: #14b8a6;
+}
+</style>
+{% endblock %}

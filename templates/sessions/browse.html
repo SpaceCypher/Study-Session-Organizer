@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Sessions - Study Session Organizer{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">Browse Study Sessions</h1>
+    
+    <!-- Search Bar -->
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+        <div class="relative">
+            <input type="text" id="search-input" placeholder="Search by subject, description, or organizer name..." 
+                   class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+            <i data-feather="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">Filters</h2>
+            <button onclick="clearFilters()" class="text-sm text-teal-600 hover:text-teal-700 font-medium">
+                <i data-feather="x-circle" class="inline w-4 h-4"></i> Clear All
+            </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                <select id="filter-subject" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                    <option value="">All Subjects</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                <input type="date" id="filter-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select id="filter-status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                    <option value="">All Status</option>
+                    <option value="Planned">Planned</option>
+                    <option value="Active">Active</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Header -->
+    <div class="flex justify-between items-center mb-4">
+        <p id="results-count" class="text-gray-600 text-sm"></p>
+        <a href="/sessions/create" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition duration-200 inline-flex items-center gap-2">
+            <i data-feather="plus" class="w-4 h-4"></i>
+            Create Session
+        </a>
+    </div>
+
+    <!-- Sessions List -->
+    <div id="sessions-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Sessions will be loaded here -->
+    </div>
+</div>
+
+<script>
+let searchTimeout;
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadSessions();
+    loadSubjects();
+    
+    // Add event listeners for real-time filtering
+    document.getElementById('filter-subject').addEventListener('change', loadSessions);
+    document.getElementById('filter-date').addEventListener('change', loadSessions);
+    document.getElementById('filter-status').addEventListener('change', loadSessions);
+    
+    // Search with debounce
+    document.getElementById('search-input').addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            loadSessions();
+        }, 500); // Wait 500ms after user stops typing
+    });
+    
+    feather.replace();
+});
+
+async function loadSessions() {
+    const container = document.getElementById('sessions-container');
+    container.innerHTML = '<div class="col-span-3 flex justify-center items-center py-12"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div></div>';
+    
+    try {
+        const subjectId = document.getElementById('filter-subject').value;
+        const date = document.getElementById('filter-date').value;
+        const status = document.getElementById('filter-status').value;
+        const search = document.getElementById('search-input').value.trim();
+        
+        // Build query parameters
+        const params = new URLSearchParams();
+        if (subjectId) params.append('subject_id', subjectId);
+        if (date) params.append('date', date);
+        if (status) params.append('status', status);
+        if (search) params.append('search', search);
+        
+        const url = `/sessions${params.toString() ? '?' + params.toString() : ''}`;
+        const data = await apiCall(url);
+        
+        // Update results count
+        const resultsCount = document.getElementById('results-count');
+        resultsCount.textContent = data.data.length > 0 
+            ? `Showing ${data.data.length} session${data.data.length !== 1 ? 's' : ''}`
+            : '';
+        
+        if (!data.data || data.data.length === 0) {
+            container.innerHTML = `
+                <div class="col-span-3 text-center py-12">
+                    <i data-feather="inbox" class="w-16 h-16 text-gray-400 mx-auto mb-4"></i>
+                    <p class="text-gray-600 text-lg">No sessions found matching your filters</p>
+                    <button onclick="clearFilters()" class="mt-4 text-teal-600 hover:text-teal-700 font-medium">
+                        Clear Filters
+                    </button>
+                </div>
+            `;
+            feather.replace();
+            return;
+        }
+        
+        container.innerHTML = data.data.map(session => {
+            const statusColors = {
+                'Planned': 'bg-blue-100 text-blue-800',
+                'Active': 'bg-green-100 text-green-800',
+                'Completed': 'bg-gray-100 text-gray-800'
+            };
+            const statusColor = statusColors[session.status] || 'bg-gray-100 text-gray-800';
+            
+            return `
+                <div class="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition duration-200 border border-gray-100">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-semibold text-lg text-gray-900">${session.subject_name}</h3>
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold ${statusColor}">
+                            ${session.status}
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-2">${session.subject_code}</p>
+                    <p class="text-sm text-gray-600 mb-4" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${session.description || 'No description provided'}</p>
+                    <div class="space-y-2 text-sm text-gray-600 mb-4">
+                        <p><i data-feather="calendar" class="inline w-4 h-4"></i> <strong>Date:</strong> ${formatDate(session.session_date)}</p>
+                        <p><i data-feather="clock" class="inline w-4 h-4"></i> <strong>Time:</strong> ${formatTime(session.start_time)} - ${formatTime(session.end_time)}</p>
+                        ${session.building ? `<p><i data-feather="map-pin" class="inline w-4 h-4"></i> <strong>Location:</strong> ${session.building} ${session.room_number || ''}</p>` : ''}
+                        <p><i data-feather="users" class="inline w-4 h-4"></i> <strong>Participants:</strong> ${session.participant_count || 0}/${session.max_participants}</p>
+                        <p><i data-feather="user" class="inline w-4 h-4"></i> <strong>Organizer:</strong> ${session.creator_name}</p>
+                    </div>
+                    <a href="/sessions/${session.session_id}" class="block w-full text-center bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition duration-200">
+                        View Details
+                    </a>
+                </div>
+            `;
+        }).join('');
+        
+        feather.replace();
+    } catch (error) {
+        console.error('Failed to load sessions:', error);
+        container.innerHTML = `
+            <div class="col-span-3 text-center py-12">
+                <i data-feather="alert-circle" class="w-16 h-16 text-red-400 mx-auto mb-4"></i>
+                <p class="text-red-600 text-lg">Failed to load sessions</p>
+                <button onclick="loadSessions()" class="mt-4 text-teal-600 hover:text-teal-700 font-medium">
+                    Try Again
+                </button>
+            </div>
+        `;
+        feather.replace();
+    }
+}
+
+async function loadSubjects() {
+    try {
+        const data = await apiCall('/subjects');
+        const subjectSelect = document.getElementById('filter-subject');
+        
+        data.data.forEach(subject => {
+            const option = document.createElement('option');
+            option.value = subject.subject_id;
+            option.textContent = `${subject.subject_name} (${subject.subject_code})`;
+            subjectSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Failed to load subjects:', error);
+    }
+}
+
+function clearFilters() {
+    document.getElementById('filter-subject').value = '';
+    document.getElementById('filter-date').value = '';
+    document.getElementById('filter-status').value = '';
+    document.getElementById('search-input').value = '';
+    loadSessions();
+}
+</script>
+{% endblock %}

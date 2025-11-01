@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Session Details - Study Session Organizer{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div id="session-details">
+        <!-- Loading state -->
+        <div class="text-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto"></div>
+            <p class="text-gray-600 mt-4">Loading session details...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+const sessionId = {{ session_id }};
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadSessionDetails();
+});
+
+async function loadSessionDetails() {
+    const container = document.getElementById('session-details');
+    
+    try {
+        const data = await apiCall(`/sessions/${sessionId}`);
+        const session = data.data;
+        
+        container.innerHTML = `
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div class="bg-teal-600 text-white p-6">
+                    <h1 class="text-3xl font-bold mb-2">${session.subject_name}</h1>
+                    <p class="text-teal-100">${session.subject_code}</p>
+                </div>
+                
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <h3 class="font-semibold text-gray-900 mb-4">Session Information</h3>
+                            <div class="space-y-3 text-sm text-gray-600">
+                                <p><i data-feather="calendar" class="inline w-4 h-4"></i> <strong>Date:</strong> ${formatDate(session.session_date)}</p>
+                                <p><i data-feather="clock" class="inline w-4 h-4"></i> <strong>Time:</strong> ${formatTime(session.start_time)} - ${formatTime(session.end_time)}</p>
+                                <p><i data-feather="map-pin" class="inline w-4 h-4"></i> <strong>Location:</strong> ${session.building || 'TBD'} ${session.room_number || ''}</p>
+                                <p><i data-feather="users" class="inline w-4 h-4"></i> <strong>Participants:</strong> ${session.participant_count}/${session.max_participants}</p>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="font-semibold text-gray-900 mb-4">Description</h3>
+                            <p class="text-gray-600 text-sm">${session.description || 'No description provided'}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t pt-6">
+                        <h3 class="font-semibold text-gray-900 mb-4">Participants</h3>
+                        <div id="participants-list" class="space-y-2">
+                            Loading participants...
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex gap-4 flex-wrap">
+                        ${session.is_creator ? `
+                            <a href="/sessions/${sessionId}/edit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                                Edit Session
+                            </a>
+                            <button onclick="cancelSession()" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition duration-200">
+                                Cancel Session
+                            </button>
+                        ` : session.is_participant ? `
+                            <button onclick="leaveSession()" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition duration-200">
+                                Leave Session
+                            </button>
+                        ` : `
+                            <button onclick="joinSession()" class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition duration-200">
+                                Join Session
+                            </button>
+                        `}
+                        <a href="/sessions/browse" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition duration-200">
+                            Back to Sessions
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        feather.replace();
+        loadParticipants();
+        
+    } catch (error) {
+        console.error('Failed to load session:', error);
+        container.innerHTML = `
+            <div class="text-center py-12 text-red-600">
+                <p class="text-lg font-medium">Failed to load session details</p>
+                <a href="/sessions/browse" class="mt-4 inline-block text-teal-600 hover:text-teal-700">Back to Sessions</a>
+            </div>
+        `;
+    }
+}
+
+async function loadParticipants() {
+    const container = document.getElementById('participants-list');
+    
+    try {
+        const data = await apiCall(`/sessions/${sessionId}`);
+        const session = data.data;
+        const participants = session.participants || [];
+        
+        if (participants.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-sm italic">No participants yet</p>';
+            return;
+        }
+        
+        const participantsHTML = participants.map(p => `
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+                        <i data-feather="user" class="w-5 h-5 text-teal-600"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">${p.name}</p>
+                        <p class="text-xs text-gray-500">${p.major || 'Unknown Major'} • ${p.year_of_study || 'N/A'}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    ${p.role === 'Organizer' ? 
+                        '<span class="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">Organizer</span>' : 
+                        p.role === 'Helper' ?
+                        '<span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">Helper</span>' :
+                        '<span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">Participant</span>'
+                    }
+                    ${p.compatibility_score ? 
+                        `<span class="text-sm text-gray-600" title="Compatibility Score">
+                            <i data-feather="heart" class="inline w-4 h-4 text-red-500"></i> ${Math.round(p.compatibility_score)}%
+                        </span>` : ''
+                    }
+                    ${session.is_creator && p.role !== 'Organizer' ? 
+                        `<button onclick="removeParticipant(${p.student_id}, '${p.name}')" 
+                                class="text-red-600 hover:text-red-700 p-1" 
+                                title="Remove participant">
+                            <i data-feather="x-circle" class="w-5 h-5"></i>
+                        </button>` : ''
+                    }
+                </div>
+            </div>
+        `).join('');
+        
+        container.innerHTML = participantsHTML;
+        feather.replace();
+        
+    } catch (error) {
+        console.error('Failed to load participants:', error);
+        container.innerHTML = '<p class="text-red-500 text-sm">Failed to load participants</p>';
+    }
+}
+
+async function joinSession() {
+    try {
+        await apiCall(`/sessions/${sessionId}/join`, 'POST');
+        showToast('Successfully joined session!', 'success');
+        setTimeout(() => location.reload(), 1000);
+    } catch (error) {
+        console.error('Failed to join session:', error);
+        showToast('Failed to join session', 'error');
+    }
+}
+
+async function leaveSession() {
+    if (!confirm('Are you sure you want to leave this session?')) return;
+    
+    try {
+        await apiCall(`/sessions/${sessionId}/leave`, 'POST');
+        showToast('You have left the session', 'success');
+        setTimeout(() => location.reload(), 1000);
+    } catch (error) {
+        console.error('Failed to leave session:', error);
+        showToast('Failed to leave session', 'error');
+    }
+}
+
+async function cancelSession() {
+    if (!confirm('Are you sure you want to cancel this session? This action cannot be undone.')) return;
+    
+    try {
+        await apiCall(`/sessions/${sessionId}/cancel`, 'POST');
+        showToast('Session cancelled successfully', 'success');
+        setTimeout(() => {
+            window.location.href = '/sessions/browse';
+        }, 1000);
+    } catch (error) {
+        console.error('Failed to cancel session:', error);
+        showToast('Failed to cancel session', 'error');
+    }
+}
+
+async function removeParticipant(studentId, studentName) {
+    if (!confirm(`Are you sure you want to remove ${studentName} from this session?`)) return;
+    
+    try {
+        await apiCall(`/sessions/${sessionId}/participants/${studentId}`, 'DELETE');
+        showToast('Participant removed successfully', 'success');
+        setTimeout(() => location.reload(), 1000);
+    } catch (error) {
+        console.error('Failed to remove participant:', error);
+        showToast('Failed to remove participant', 'error');
+    }
+}
+</script>
+{% endblock %}

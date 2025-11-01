@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Study Session Organizer{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-indigo-50 px-4 py-8">
+    <div class="max-w-2xl w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
+        <!-- Logo and Title -->
+        <div>
+            <h2 class="text-center text-3xl font-extrabold text-gray-900">
+                📚 Create Account
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Join Study Session Organizer
+            </p>
+        </div>
+        
+        <!-- Error Message -->
+        <div id="error-message" class="hidden bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+            <p class="text-sm"></p>
+        </div>
+        
+        <!-- Registration Form -->
+        <form id="register-form" class="mt-8 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Name -->
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700">Full Name *</label>
+                    <input 
+                        id="name" 
+                        name="name" 
+                        type="text" 
+                        required 
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        placeholder="John Doe"
+                    >
+                </div>
+                
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email *</label>
+                    <input 
+                        id="email" 
+                        name="email" 
+                        type="email" 
+                        required 
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        placeholder="john@example.com"
+                    >
+                </div>
+                
+                <!-- SRN -->
+                <div>
+                    <label for="srn" class="block text-sm font-medium text-gray-700">SRN (Student ID) *</label>
+                    <input 
+                        id="srn" 
+                        name="srn" 
+                        type="text" 
+                        required 
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        placeholder="PES1UG21CS123"
+                    >
+                </div>
+                
+                <!-- Phone -->
+                <div>
+                    <label for="phone" class="block text-sm font-medium text-gray-700">Phone (10 digits) *</label>
+                    <input 
+                        id="phone" 
+                        name="phone" 
+                        type="tel" 
+                        required 
+                        pattern="[0-9]{10}"
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        placeholder="1234567890"
+                    >
+                </div>
+                
+                <!-- Password -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password (min 6 chars) *</label>
+                    <input 
+                        id="password" 
+                        name="password" 
+                        type="password" 
+                        required 
+                        minlength="6"
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        placeholder="••••••"
+                    >
+                </div>
+                
+                <!-- Major -->
+                <div>
+                    <label for="major" class="block text-sm font-medium text-gray-700">Major *</label>
+                    <input 
+                        id="major" 
+                        name="major" 
+                        type="text" 
+                        required 
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        placeholder="Computer Science"
+                    >
+                </div>
+                
+                <!-- Year -->
+                <div>
+                    <label for="year" class="block text-sm font-medium text-gray-700">Year *</label>
+                    <select 
+                        id="year" 
+                        name="year" 
+                        required 
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    >
+                        <option value="">Select Year</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                        <option value="5">5th Year</option>
+                        <option value="6">6th Year</option>
+                    </select>
+                </div>
+                
+                <!-- GPA -->
+                <div>
+                    <label for="gpa" class="block text-sm font-medium text-gray-700">GPA (0.0 - 10.0) *</label>
+                    <input 
+                        id="gpa" 
+                        name="gpa" 
+                        type="number" 
+                        step="0.01" 
+                        min="0" 
+                        max="10" 
+                        required 
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        placeholder="8.50"
+                    >
+                </div>
+                
+                <!-- Learning Style -->
+                <div>
+                    <label for="learning_style" class="block text-sm font-medium text-gray-700">Learning Style *</label>
+                    <select 
+                        id="learning_style" 
+                        name="learning_style" 
+                        required 
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    >
+                        <option value="">Select Style</option>
+                        <option value="Visual">Visual</option>
+                        <option value="Auditory">Auditory</option>
+                        <option value="Reading/Writing">Reading/Writing</option>
+                        <option value="Kinesthetic">Kinesthetic</option>
+                        <option value="Mixed">Mixed</option>
+                    </select>
+                </div>
+                
+                <!-- Personality Type -->
+                <div>
+                    <label for="personality_type" class="block text-sm font-medium text-gray-700">Personality Type (MBTI) *</label>
+                    <select 
+                        id="personality_type" 
+                        name="personality_type" 
+                        required 
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    >
+                        <option value="">Select Type</option>
+                        <option value="INTJ">INTJ - Architect</option>
+                        <option value="INTP">INTP - Logician</option>
+                        <option value="ENTJ">ENTJ - Commander</option>
+                        <option value="ENTP">ENTP - Debater</option>
+                        <option value="INFJ">INFJ - Advocate</option>
+                        <option value="INFP">INFP - Mediator</option>
+                        <option value="ENFJ">ENFJ - Protagonist</option>
+                        <option value="ENFP">ENFP - Campaigner</option>
+                        <option value="ISTJ">ISTJ - Logistician</option>
+                        <option value="ISFJ">ISFJ - Defender</option>
+                        <option value="ESTJ">ESTJ - Executive</option>
+                        <option value="ESFJ">ESFJ - Consul</option>
+                        <option value="ISTP">ISTP - Virtuoso</option>
+                        <option value="ISFP">ISFP - Adventurer</option>
+                        <option value="ESTP">ESTP - Entrepreneur</option>
+                        <option value="ESFP">ESFP - Entertainer</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <div>
+                <button 
+                    type="submit" 
+                    id="register-button"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition duration-200"
+                >
+                    Create Account
+                </button>
+            </div>
+        </form>
+        
+        <!-- Login Link -->
+        <div class="text-center">
+            <p class="text-sm text-gray-600">
+                Already have an account? 
+                <a href="{{ url_for('auth.login') }}" class="font-medium text-teal-600 hover:text-teal-500">
+                    Sign in here
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById('register-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const button = document.getElementById('register-button');
+    const errorDiv = document.getElementById('error-message');
+    
+    // Hide previous errors
+    errorDiv.classList.add('hidden');
+    
+    // Get form data
+    const formData = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        srn: document.getElementById('srn').value,
+        phone: document.getElementById('phone').value,
+        password: document.getElementById('password').value,
+        major: document.getElementById('major').value,
+        year: document.getElementById('year').value,
+        gpa: document.getElementById('gpa').value,
+        learning_style: document.getElementById('learning_style').value,
+        personality_type: document.getElementById('personality_type').value
+    };
+    
+    // Set loading state
+    setButtonLoading(button, true);
+    
+    try {
+        const response = await fetch('/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Registration successful! Redirecting...', 'success');
+            setTimeout(() => {
+                window.location.href = data.redirect;
+            }, 500);
+        } else {
+            errorDiv.querySelector('p').textContent = data.message;
+            errorDiv.classList.remove('hidden');
+            setButtonLoading(button, false);
+        }
+    } catch (error) {
+        errorDiv.querySelector('p').textContent = 'An error occurred. Please try again.';
+        errorDiv.classList.remove('hidden');
+        setButtonLoading(button, false);
+    }
+});
+</script>
+{% endblock %}

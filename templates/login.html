@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Study Session Organizer{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-indigo-50 px-4">
+    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
+        <!-- Logo and Title -->
+        <div>
+            <h2 class="text-center text-3xl font-extrabold text-gray-900">
+                📚 Study Session Organizer
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Sign in to your account
+            </p>
+        </div>
+        
+        <!-- Error Message -->
+        <div id="error-message" class="hidden bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+            <p class="text-sm"></p>
+        </div>
+        
+        <!-- Login Form -->
+        <form id="login-form" class="mt-8 space-y-6">
+            <div class="space-y-4">
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">
+                        Email address
+                    </label>
+                    <div class="mt-1">
+                        <input 
+                            id="email" 
+                            name="email" 
+                            type="email" 
+                            required 
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                            placeholder="you@example.com"
+                        >
+                    </div>
+                </div>
+                
+                <!-- Password -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">
+                        Password
+                    </label>
+                    <div class="mt-1">
+                        <input 
+                            id="password" 
+                            name="password" 
+                            type="password" 
+                            required 
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                            placeholder="Enter your password"
+                        >
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Remember Me -->
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <input 
+                        id="remember-me" 
+                        name="remember-me" 
+                        type="checkbox" 
+                        class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                    >
+                    <label for="remember-me" class="ml-2 block text-sm text-gray-900">
+                        Remember me
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <div>
+                <button 
+                    type="submit" 
+                    id="login-button"
+                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition duration-200"
+                >
+                    Sign in
+                </button>
+            </div>
+        </form>
+        
+        <!-- Register Link -->
+        <div class="text-center">
+            <p class="text-sm text-gray-600">
+                Don't have an account? 
+                <a href="{{ url_for('auth.register') }}" class="font-medium text-teal-600 hover:text-teal-500">
+                    Register here
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const button = document.getElementById('login-button');
+    const errorDiv = document.getElementById('error-message');
+    
+    // Hide previous errors
+    errorDiv.classList.add('hidden');
+    
+    // Get form data
+    const formData = {
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value
+    };
+    
+    // Set loading state
+    setButtonLoading(button, true);
+    
+    try {
+        const response = await fetch('/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Login successful! Redirecting...', 'success');
+            setTimeout(() => {
+                window.location.href = data.redirect;
+            }, 500);
+        } else {
+            errorDiv.querySelector('p').textContent = data.message;
+            errorDiv.classList.remove('hidden');
+            setButtonLoading(button, false);
+        }
+    } catch (error) {
+        errorDiv.querySelector('p').textContent = 'An error occurred. Please try again.';
+        errorDiv.classList.remove('hidden');
+        setButtonLoading(button, false);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Create Session - Study Session Organizer{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">Create Study Session</h1>
+    
+    <div class="bg-white rounded-lg shadow-sm p-6">
+        <form id="create-session-form" class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Subject *</label>
+                <select id="subject_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                    <option value="">Select a subject</option>
+                </select>
+            </div>
+            
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-gray-700">Location</label>
+                    <button type="button" onclick="showRecommendedLocations()" class="text-sm text-teal-600 hover:text-teal-700 flex items-center gap-1">
+                        <i data-feather="zap" class="w-4 h-4"></i>
+                        Get Recommendations
+                    </button>
+                </div>
+                <select id="location_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                    <option value="">Select a location (optional)</option>
+                </select>
+                <div id="location-recommendations" class="mt-2 hidden"></div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Date *</label>
+                    <input type="date" id="session_date" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Max Participants *</label>
+                    <input type="number" id="max_participants" required min="2" max="15" value="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Start Time *</label>
+                    <input type="time" id="start_time" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">End Time *</label>
+                    <input type="time" id="end_time" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea id="description" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="What will you study? Any specific topics?"></textarea>
+            </div>
+            
+            <div class="flex gap-4">
+                <button type="submit" class="flex-1 bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition duration-200 font-medium">
+                    Create Session
+                </button>
+                <a href="/sessions/browse" class="flex-1 text-center bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition duration-200 font-medium">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    loadSubjects();
+    loadLocations();
+    document.getElementById('create-session-form').addEventListener('submit', handleSubmit);
+});
+
+async function loadSubjects() {
+    const select = document.getElementById('subject_id');
+    select.innerHTML = '<option value="">Select a subject</option>';
+    
+    try {
+        const data = await apiCall('/subjects', 'GET');
+        if (data.success && data.data) {
+            data.data.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject.subject_id;
+                option.textContent = subject.subject_name;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Failed to load subjects:', error);
+        showToast('Failed to load subjects', 'error');
+    }
+}
+
+async function loadLocations() {
+    const select = document.getElementById('location_id');
+    select.innerHTML = '<option value="">Select a location (optional)</option>';
+    
+    try {
+        const data = await apiCall('/locations', 'GET');
+        if (data.success && data.data) {
+            data.data.forEach(location => {
+                const option = document.createElement('option');
+                option.value = location.location_id;
+                option.textContent = `${location.building_name || location.building} - Room ${location.room_number} (Capacity: ${location.capacity})`;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Failed to load locations:', error);
+        showToast('Failed to load locations', 'error');
+    }
+}
+
+async function showRecommendedLocations() {
+    const maxParticipants = document.getElementById('max_participants').value;
+    const sessionDate = document.getElementById('session_date').value;
+    const startTime = document.getElementById('start_time').value;
+    const endTime = document.getElementById('end_time').value;
+    
+    if (!maxParticipants || !sessionDate || !startTime || !endTime) {
+        showToast('Please fill in date, time, and max participants first', 'error');
+        return;
+    }
+    
+    const container = document.getElementById('location-recommendations');
+    container.innerHTML = '<p class="text-sm text-gray-500">Loading recommendations...</p>';
+    container.classList.remove('hidden');
+    
+    try {
+        const params = new URLSearchParams({
+            max_participants: maxParticipants,
+            session_date: sessionDate,
+            start_time: startTime,
+            end_time: endTime
+        });
+        
+        const data = await apiCall(`/locations/recommend?${params}`, 'GET');
+        
+        if (data.success && data.data && data.data.length > 0) {
+            const html = `
+                <div class="bg-teal-50 border border-teal-200 rounded-lg p-3">
+                    <p class="text-sm font-medium text-teal-900 mb-2">
+                        <i data-feather="check-circle" class="w-4 h-4 inline-block"></i>
+                        Recommended locations:
+                    </p>
+                    <div class="space-y-1">
+                        ${data.data.slice(0, 3).map(loc => `
+                            <button type="button" onclick="selectLocation(${loc.location_id})" class="w-full text-left text-sm bg-white px-3 py-2 rounded hover:bg-teal-100 transition duration-200">
+                                ${loc.building} - Room ${loc.room_number} (Capacity: ${loc.capacity})
+                                <span class="text-teal-600 float-right">→ Select</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+            feather.replace();
+        } else {
+            container.innerHTML = '<p class="text-sm text-gray-500">No available locations found for this time slot</p>';
+        }
+    } catch (error) {
+        console.error('Failed to load recommendations:', error);
+        container.innerHTML = '<p class="text-sm text-red-500">Failed to load recommendations</p>';
+    }
+}
+
+function selectLocation(locationId) {
+    document.getElementById('location_id').value = locationId;
+    document.getElementById('location-recommendations').classList.add('hidden');
+    showToast('Location selected', 'success');
+}
+
+async function handleSubmit(e) {
+    e.preventDefault();
+    
+    const locationId = document.getElementById('location_id').value;
+    
+    const formData = {
+        subject_id: document.getElementById('subject_id').value,
+        date: document.getElementById('session_date').value, // Changed from session_date to date
+        start_time: document.getElementById('start_time').value + ':00', // Add seconds
+        end_time: document.getElementById('end_time').value + ':00', // Add seconds
+        max_participants: parseInt(document.getElementById('max_participants').value),
+        description: document.getElementById('description').value
+    };
+    
+    // Add location_id if selected
+    if (locationId) {
+        formData.location_id = parseInt(locationId);
+    }
+    
+    try {
+        const data = await apiCall('/sessions/create', 'POST', formData);
+        showToast('Session created successfully!', 'success');
+        setTimeout(() => {
+            window.location.href = '/sessions/' + data.data.session_id;
+        }, 1000);
+    } catch (error) {
+        console.error('Failed to create session:', error);
+        showToast('Failed to create session', 'error');
+    }
+}
+</script>
+{% endblock %}

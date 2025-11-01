@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Find Study Partners - Study Session Organizer{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">Find Study Partners</h1>
+    
+    <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <form id="search-form" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Subject *</label>
+                    <select id="subject_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                        <option value="">Select a subject</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Date *</label>
+                    <input type="date" id="session_date" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Start Time *</label>
+                    <input type="time" id="start_time" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Duration (minutes)</label>
+                <input type="number" id="duration" value="60" min="30" max="240" step="15" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+            </div>
+            <button type="submit" class="w-full bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition duration-200 font-medium">
+                Find Compatible Partners
+            </button>
+        </form>
+    </div>
+
+    <div id="results-container" class="hidden">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Recommended Partners</h2>
+        <div id="partners-list" class="space-y-4">
+            <!-- Results will be loaded here -->
+        </div>
+    </div>
+
+    <div id="empty-state" class="hidden text-center py-12">
+        <i data-feather="users" class="mx-auto text-gray-400 mb-4" style="width: 64px; height: 64px;"></i>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No partners found</h3>
+        <p class="text-gray-600">Try adjusting your search criteria</p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    loadSubjects();
+    document.getElementById('search-form').addEventListener('submit', handleSearch);
+});
+
+async function loadSubjects() {
+    try {
+        const data = await apiCall('/subjects');
+        const select = document.getElementById('subject_id');
+        select.innerHTML = '<option value="">Select a subject</option>';
+        
+        data.data.forEach(subject => {
+            const option = document.createElement('option');
+            option.value = subject.subject_id;
+            option.textContent = `${subject.subject_name} (${subject.subject_code})`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Failed to load subjects:', error);
+    }
+}
+
+async function handleSearch(e) {
+    e.preventDefault();
+    
+    const formData = {
+        subject_id: document.getElementById('subject_id').value,
+        date: document.getElementById('session_date').value,
+        start_time: document.getElementById('start_time').value,
+        duration: parseInt(document.getElementById('duration').value)
+    };
+    
+    const resultsContainer = document.getElementById('results-container');
+    const partnersList = document.getElementById('partners-list');
+    const emptyState = document.getElementById('empty-state');
+    
+    partnersList.innerHTML = '<p class="text-center text-gray-600 py-8">Searching for compatible partners...</p>';
+    resultsContainer.classList.remove('hidden');
+    emptyState.classList.add('hidden');
+    
+    try {
+        const data = await apiCall('/partners/find', 'POST', formData);
+        
+        if (data.data.length === 0) {
+            resultsContainer.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            return;
+        }
+        
+        partnersList.innerHTML = data.data.map(partner => `
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition duration-200">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-lg text-gray-900 mb-1">${partner.name}</h3>
+                        <p class="text-sm text-gray-600 mb-3">${partner.major} - Year ${partner.year}</p>
+                        
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                                <p class="text-xs text-gray-500">Compatibility</p>
+                                <div class="flex items-center mt-1">
+                                    <div class="flex-1 bg-gray-200 rounded-full h-2 mr-2">
+                                        <div class="bg-teal-600 h-2 rounded-full" style="width: ${partner.compatibility_score * 100}%"></div>
+                                    </div>
+                                    <span class="text-sm font-medium text-teal-600">${(partner.compatibility_score * 100).toFixed(0)}%</span>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">Proficiency</p>
+                                <span class="inline-block mt-1 px-2 py-1 text-xs font-medium rounded ${getProficiencyColor(partner.proficiency_level)}">
+                                    ${partner.proficiency_level}
+                                </span>
+                            </div>
+                            ${partner.can_teach ? '<div><p class="text-xs text-gray-500">Role</p><span class="inline-block mt-1 px-2 py-1 text-xs font-medium rounded bg-purple-100 text-purple-800">Can Teach</span></div>' : ''}
+                        </div>
+                        
+                        ${partner.past_sessions_together > 0 ? `
+                            <p class="text-sm text-gray-600">
+                                <i data-feather="check-circle" class="inline w-4 h-4 text-green-600"></i>
+                                ${partner.past_sessions_together} session${partner.past_sessions_together > 1 ? 's' : ''} together
+                                ${partner.avg_past_rating ? ` (${partner.avg_past_rating.toFixed(1)} avg rating)` : ''}
+                            </p>
+                        ` : ''}
+                    </div>
+                    
+                    <button onclick="invitePartner(${partner.student_id}, '${partner.name}')" class="ml-4 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition duration-200 text-sm">
+                        Invite
+                    </button>
+                </div>
+            </div>
+        `).join('');
+        
+        feather.replace();
+        
+    } catch (error) {
+        console.error('Failed to find partners:', error);
+        partnersList.innerHTML = `
+            <div class="text-center py-12 text-red-500">
+                <p class="text-lg font-medium">Failed to find partners</p>
+                <button onclick="document.getElementById('search-form').dispatchEvent(new Event('submit'))" class="mt-4 text-teal-600 hover:text-teal-700 font-medium">
+                    Try again
+                </button>
+            </div>
+        `;
+    }
+}
+
+function getProficiencyColor(level) {
+    const colors = {
+        'Beginner': 'bg-blue-100 text-blue-800',
+        'Intermediate': 'bg-yellow-100 text-yellow-800',
+        'Advanced': 'bg-orange-100 text-orange-800',
+        'Expert': 'bg-red-100 text-red-800'
+    };
+    return colors[level] || 'bg-gray-100 text-gray-800';
+}
+
+async function invitePartner(partnerId, partnerName) {
+    // Get the search form data to include in invitation
+    const formData = {
+        partner_id: partnerId,
+        subject_id: document.getElementById('subject_id').value,
+        date: document.getElementById('session_date').value,
+        start_time: document.getElementById('start_time').value,
+        message: `I think we'd make great study partners!`
+    };
+    
+    try {
+        const data = await apiCall('/partners/invite', 'POST', formData);
+        showToast(data.message, 'success');
+    } catch (error) {
+        console.error('Failed to send invitation:', error);
+        showToast('Failed to send invitation. Please try again.', 'error');
+    }
+}
+</script>
+{% endblock %}

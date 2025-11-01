@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile - Study Session Organizer{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Edit Profile</h1>
+        <p class="text-gray-600 mt-2">Update your profile information and preferences</p>
+    </div>
+
+    <form id="profile-form" class="space-y-6">
+        <!-- Personal Information -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Personal Information</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                    <input type="text" id="name" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                    <input type="tel" id="phone" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                           placeholder="+1 (555) 123-4567">
+                </div>
+            </div>
+        </div>
+
+        <!-- Academic Information -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Academic Information</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Major *</label>
+                    <input type="text" id="major" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                           placeholder="Computer Science">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Year of Study *</label>
+                    <select id="year_of_study" required 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                        <option value="">Select Year</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                        <option value="5">5th Year</option>
+                        <option value="6">Graduate</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">GPA (out of 10) *</label>
+                    <input type="number" id="gpa" required step="0.01" min="0" max="10"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                           placeholder="8.50">
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Preferences -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Learning Preferences</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Learning Style</label>
+                    <select id="learning_style" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                        <option value="">Select Style</option>
+                        <option value="Visual">Visual</option>
+                        <option value="Auditory">Auditory</option>
+                        <option value="Reading/Writing">Reading/Writing</option>
+                        <option value="Kinesthetic">Kinesthetic</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Personality Type</label>
+                    <select id="personality_type" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                        <option value="">Select Type</option>
+                        <option value="INTJ">INTJ - Architect</option>
+                        <option value="INTP">INTP - Logician</option>
+                        <option value="ENTJ">ENTJ - Commander</option>
+                        <option value="ENTP">ENTP - Debater</option>
+                        <option value="INFJ">INFJ - Advocate</option>
+                        <option value="INFP">INFP - Mediator</option>
+                        <option value="ENFJ">ENFJ - Protagonist</option>
+                        <option value="ENFP">ENFP - Campaigner</option>
+                        <option value="ISTJ">ISTJ - Logistician</option>
+                        <option value="ISFJ">ISFJ - Defender</option>
+                        <option value="ESTJ">ESTJ - Executive</option>
+                        <option value="ESFJ">ESFJ - Consul</option>
+                        <option value="ISTP">ISTP - Virtuoso</option>
+                        <option value="ISFP">ISFP - Adventurer</option>
+                        <option value="ESTP">ESTP - Entrepreneur</option>
+                        <option value="ESFP">ESFP - Entertainer</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mt-4 space-y-3">
+                <label class="flex items-center">
+                    <input type="checkbox" id="needs_help" 
+                           class="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500">
+                    <span class="ml-2 text-sm text-gray-700">I'm seeking help in my subjects</span>
+                </label>
+                
+                <label class="flex items-center">
+                    <input type="checkbox" id="can_teach" 
+                           class="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500">
+                    <span class="ml-2 text-sm text-gray-700">I can teach and help others</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-4">
+            <button type="submit" 
+                    class="flex-1 bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition duration-200 font-medium">
+                Save Changes
+            </button>
+            <a href="/profile" 
+               class="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition duration-200 font-medium text-center">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    loadCurrentProfile();
+    document.getElementById('profile-form').addEventListener('submit', handleSubmit);
+});
+
+async function loadCurrentProfile() {
+    try {
+        const data = await apiCall('/profile/current');
+        const profile = data.data;
+        
+        // Fill form with current data
+        document.getElementById('name').value = profile.name || '';
+        document.getElementById('phone').value = profile.phone || '';
+        document.getElementById('major').value = profile.major || '';
+        document.getElementById('year_of_study').value = profile.year || '';
+        document.getElementById('gpa').value = profile.gpa || '';
+        document.getElementById('learning_style').value = profile.learning_style || '';
+        document.getElementById('personality_type').value = profile.personality_type || '';
+        document.getElementById('needs_help').checked = profile.needs_help || false;
+        document.getElementById('can_teach').checked = profile.can_teach || false;
+        
+    } catch (error) {
+        console.error('Failed to load profile:', error);
+        showToast('Failed to load profile data', 'error');
+    }
+}
+
+async function handleSubmit(e) {
+    e.preventDefault();
+    
+    const formData = {
+        name: document.getElementById('name').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        major: document.getElementById('major').value.trim(),
+        year_of_study: parseInt(document.getElementById('year_of_study').value),
+        gpa: parseFloat(document.getElementById('gpa').value),
+        learning_style: document.getElementById('learning_style').value,
+        personality_type: document.getElementById('personality_type').value,
+        needs_help: document.getElementById('needs_help').checked,
+        can_teach: document.getElementById('can_teach').checked
+    };
+    
+    // Validation
+    if (!formData.name) {
+        showToast('Name is required', 'error');
+        return;
+    }
+    
+    if (!formData.major) {
+        showToast('Major is required', 'error');
+        return;
+    }
+    
+    if (!formData.year_of_study || formData.year_of_study < 1 || formData.year_of_study > 6) {
+        showToast('Please select a valid year of study', 'error');
+        return;
+    }
+    
+    if (!formData.gpa || formData.gpa < 0 || formData.gpa > 10) {
+        showToast('GPA must be between 0 and 10', 'error');
+        return;
+    }
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Saving...';
+    submitBtn.disabled = true;
+    
+    try {
+        await apiCall('/profile', 'PUT', formData);
+        showToast('Profile updated successfully!', 'success');
+        setTimeout(() => {
+            window.location.href = '/profile';
+        }, 1500);
+    } catch (error) {
+        console.error('Failed to update profile:', error);
+        showToast(error.message || 'Failed to update profile', 'error');
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    }
+}
+</script>
+{% endblock %}
