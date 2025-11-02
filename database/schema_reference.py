@@ -34,7 +34,7 @@ COLUMNS = {
     
     'SESSION_PARTICIPANT': ['participant_id', 'session_id', 'student_id', 'role', 'joined_date'],
     
-    'SUBJECT': ['subject_id', 'subject_name', 'subject_code', 'credits', 'difficulty_level'],
+    'SUBJECT': ['subject_id', 'subject_name', 'subject_code', 'department', 'credit_hours', 'difficulty_level', 'description'],
     
     'LOCATION': ['location_id', 'building', 'room_number', 'capacity', 'accessibility', 'available_hours'],
     

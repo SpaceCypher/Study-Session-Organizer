@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Subjects - Study Session Organizer{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">My Subjects</h1>
+        <button onclick="showAddSubjectModal()" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition duration-200 flex items-center gap-2">
+            <i data-feather="plus" class="w-5 h-5"></i>
+            Add Subject
+        </button>
+    </div>
+
+    <!-- Enrolled Subjects -->
+    <div id="subjects-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Loading state -->
+        <div class="col-span-full text-center py-12 text-gray-500">
+            <div class="animate-pulse">Loading subjects...</div>
+        </div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="empty-state" class="hidden col-span-full text-center py-12">
+        <i data-feather="book-open" class="mx-auto text-gray-400 mb-4" style="width: 64px; height: 64px;"></i>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No subjects enrolled</h3>
+        <p class="text-gray-600 mb-4">Start by adding subjects you're currently studying</p>
+        <button onclick="showAddSubjectModal()" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition duration-200">
+            Add Your First Subject
+        </button>
+    </div>
+</div>
+
+<!-- Add Subject Modal -->
+<div id="add-subject-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-gray-900">Add Subject</h2>
+                <button onclick="closeAddSubjectModal()" class="text-gray-400 hover:text-gray-600">
+                    <i data-feather="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <form id="add-subject-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Subject *</label>
+                    <select id="new-subject-id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                        <option value="">Select a subject</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Proficiency Level *</label>
+                    <select id="new-proficiency" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                        <option value="Beginner">Beginner</option>
+                        <option value="Intermediate">Intermediate</option>
+                        <option value="Advanced">Advanced</option>
+                        <option value="Expert">Expert</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Current Grade (Optional)</label>
+                    <input type="text" id="new-grade" placeholder="e.g., A, B+, 85%" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="new-can-teach" class="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500">
+                        <span class="ml-2 text-sm text-gray-700">I can teach this subject</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" id="new-needs-help" checked class="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500">
+                        <span class="ml-2 text-sm text-gray-700">I need help with this subject</span>
+                    </label>
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="closeAddSubjectModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-200">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition duration-200">
+                        Add Subject
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Subject Modal -->
+<div id="edit-subject-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-gray-900">Edit Subject</h2>
+                <button onclick="closeEditSubjectModal()" class="text-gray-400 hover:text-gray-600">
+                    <i data-feather="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <form id="edit-subject-form" class="space-y-4">
+                <input type="hidden" id="edit-subject-id">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Subject Name</label>
+                    <input type="text" id="edit-subject-name" readonly class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Proficiency Level *</label>
+                    <select id="edit-proficiency" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                        <option value="Beginner">Beginner</option>
+                        <option value="Intermediate">Intermediate</option>
+                        <option value="Advanced">Advanced</option>
+                        <option value="Expert">Expert</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Current Grade (Optional)</label>
+                    <input type="text" id="edit-grade" placeholder="e.g., A, B+, 85%" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="edit-can-teach" class="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500">
+                        <span class="ml-2 text-sm text-gray-700">I can teach this subject</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" id="edit-needs-help" class="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500">
+                        <span class="ml-2 text-sm text-gray-700">I need help with this subject</span>
+                    </label>
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="closeEditSubjectModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-200">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition duration-200">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentSubjects = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadSubjects();
+    document.getElementById('add-subject-form').addEventListener('submit', handleAddSubject);
+    document.getElementById('edit-subject-form').addEventListener('submit', handleEditSubject);
+});
+
+async function loadSubjects() {
+    const container = document.getElementById('subjects-container');
+    const emptyState = document.getElementById('empty-state');
+    
+    try {
+        const data = await apiCall('/profile/subjects');
+        currentSubjects = data.data;
+        
+        if (currentSubjects.length === 0) {
+            container.innerHTML = '';
+            emptyState.classList.remove('hidden');
+            feather.replace();
+            return;
+        }
+        
+        emptyState.classList.add('hidden');
+        container.innerHTML = currentSubjects.map(subject => `
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition duration-200">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-lg text-gray-900">${subject.subject_name}</h3>
+                        <p class="text-sm text-gray-600">${subject.subject_code}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="editSubject(${subject.subject_id})" class="text-gray-600 hover:text-teal-600 transition duration-200" title="Edit">
+                            <i data-feather="edit-2" class="w-5 h-5"></i>
+                        </button>
+                        <button onclick="deleteSubject(${subject.subject_id}, '${subject.subject_name}')" class="text-gray-600 hover:text-red-600 transition duration-200" title="Remove">
+                            <i data-feather="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Proficiency:</span>
+                        <span class="px-3 py-1 text-xs font-medium rounded ${getProficiencyColor(subject.proficiency_level)}">
+                            ${subject.proficiency_level}
+                        </span>
+                    </div>
+                    
+                    ${subject.current_grade ? `
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Grade:</span>
+                            <span class="text-sm font-medium text-gray-900">${subject.current_grade}</span>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="flex flex-wrap gap-2 pt-2">
+                        ${subject.can_teach ? '<span class="px-2 py-1 text-xs font-medium rounded bg-purple-100 text-purple-800">Can Teach</span>' : ''}
+                        ${subject.needs_help ? '<span class="px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800">Needs Help</span>' : ''}
+                    </div>
+                    
+                    ${subject.enrolled_date ? `
+                        <p class="text-xs text-gray-500 pt-2">
+                            Enrolled: ${formatDate(subject.enrolled_date)}
+                        </p>
+                    ` : ''}
+                </div>
+            </div>
+        `).join('');
+        
+        feather.replace();
+        
+    } catch (error) {
+        console.error('Failed to load subjects:', error);
+        container.innerHTML = `
+            <div class="col-span-full text-center py-12 text-red-500">
+                <p>Failed to load subjects. Please try again.</p>
+            </div>
+        `;
+    }
+}
+
+async function showAddSubjectModal() {
+    const modal = document.getElementById('add-subject-modal');
+    const select = document.getElementById('new-subject-id');
+    
+    // Load available subjects
+    try {
+        const data = await apiCall('/subjects/available');
+        select.innerHTML = '<option value="">Select a subject</option>' + 
+            data.data.map(s => `<option value="${s.subject_id}">${s.subject_name} (${s.subject_code})</option>`).join('');
+        
+        if (data.data.length === 0) {
+            select.innerHTML = '<option value="">All subjects enrolled</option>';
+            select.disabled = true;
+            showToast('You are already enrolled in all available subjects', 'info');
+            return;
+        }
+        
+        modal.classList.remove('hidden');
+        feather.replace();
+    } catch (error) {
+        showToast('Failed to load available subjects', 'error');
+    }
+}
+
+function closeAddSubjectModal() {
+    document.getElementById('add-subject-modal').classList.add('hidden');
+    document.getElementById('add-subject-form').reset();
+}
+
+async function handleAddSubject(e) {
+    e.preventDefault();
+    
+    const formData = {
+        subject_id: parseInt(document.getElementById('new-subject-id').value),
+        proficiency_level: document.getElementById('new-proficiency').value,
+        current_grade: document.getElementById('new-grade').value || null,
+        can_teach: document.getElementById('new-can-teach').checked,
+        needs_help: document.getElementById('new-needs-help').checked
+    };
+    
+    try {
+        await apiCall('/profile/subjects', 'POST', formData);
+        showToast('Subject added successfully!', 'success');
+        closeAddSubjectModal();
+        loadSubjects();
+    } catch (error) {
+        showToast(error.message || 'Failed to add subject', 'error');
+    }
+}
+
+function editSubject(subjectId) {
+    const subject = currentSubjects.find(s => s.subject_id === subjectId);
+    if (!subject) return;
+    
+    document.getElementById('edit-subject-id').value = subject.subject_id;
+    document.getElementById('edit-subject-name').value = `${subject.subject_name} (${subject.subject_code})`;
+    document.getElementById('edit-proficiency').value = subject.proficiency_level;
+    document.getElementById('edit-grade').value = subject.current_grade || '';
+    document.getElementById('edit-can-teach').checked = subject.can_teach === 1;
+    document.getElementById('edit-needs-help').checked = subject.needs_help === 1;
+    
+    document.getElementById('edit-subject-modal').classList.remove('hidden');
+    feather.replace();
+}
+
+function closeEditSubjectModal() {
+    document.getElementById('edit-subject-modal').classList.add('hidden');
+}
+
+async function handleEditSubject(e) {
+    e.preventDefault();
+    
+    const subjectId = document.getElementById('edit-subject-id').value;
+    const formData = {
+        proficiency_level: document.getElementById('edit-proficiency').value,
+        current_grade: document.getElementById('edit-grade').value || null,
+        can_teach: document.getElementById('edit-can-teach').checked,
+        needs_help: document.getElementById('edit-needs-help').checked
+    };
+    
+    try {
+        await apiCall(`/profile/subjects/${subjectId}`, 'PUT', formData);
+        showToast('Subject updated successfully!', 'success');
+        closeEditSubjectModal();
+        loadSubjects();
+    } catch (error) {
+        showToast(error.message || 'Failed to update subject', 'error');
+    }
+}
+
+async function deleteSubject(subjectId, subjectName) {
+    if (!confirm(`Are you sure you want to remove "${subjectName}" from your subjects?`)) {
+        return;
+    }
+    
+    try {
+        await apiCall(`/profile/subjects/${subjectId}`, 'DELETE');
+        showToast('Subject removed successfully', 'success');
+        loadSubjects();
+    } catch (error) {
+        showToast(error.message || 'Failed to remove subject', 'error');
+    }
+}
+
+function getProficiencyColor(level) {
+    const colors = {
+        'Beginner': 'bg-blue-100 text-blue-800',
+        'Intermediate': 'bg-yellow-100 text-yellow-800',
+        'Advanced': 'bg-orange-100 text-orange-800',
+        'Expert': 'bg-red-100 text-red-800'
+    };
+    return colors[level] || 'bg-gray-100 text-gray-800';
+}
+</script>
+{% endblock %}

@@ -39,9 +39,13 @@ async function loadProfile() {
                             <p class="text-teal-100">GPA: ${profile.gpa ? parseFloat(profile.gpa).toFixed(2) : 'N/A'}/10.0</p>
                         </div>
                         ${isOwn ? `
-                            <div class="flex gap-3">
+                            <div class="flex flex-wrap gap-3">
                                 <a href="/profile/edit" class="bg-white text-teal-600 px-6 py-2 rounded-lg hover:bg-teal-50 transition duration-200 font-medium">
                                     Edit Profile
+                                </a>
+                                <a href="/profile/subjects" class="bg-white text-teal-600 px-6 py-2 rounded-lg hover:bg-teal-50 transition duration-200 font-medium flex items-center gap-2">
+                                    <i data-feather="book" class="w-4 h-4"></i>
+                                    Subjects
                                 </a>
                                 <a href="/profile/availability" class="bg-white text-teal-600 px-6 py-2 rounded-lg hover:bg-teal-50 transition duration-200 font-medium flex items-center gap-2">
                                     <i data-feather="calendar" class="w-4 h-4"></i>

@@ -39,6 +39,7 @@ from routes.partners import partners_bp
 from routes.notifications import notifications_bp
 from routes.analytics import analytics_bp
 from routes.profile import profile_bp
+from routes.subjects import subjects_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(dashboard_bp)
@@ -47,6 +48,7 @@ app.register_blueprint(partners_bp)
 app.register_blueprint(notifications_bp)
 app.register_blueprint(analytics_bp)
 app.register_blueprint(profile_bp)
+app.register_blueprint(subjects_bp)
 
 
 @app.route('/')
