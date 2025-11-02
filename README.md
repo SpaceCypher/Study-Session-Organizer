@@ -49,12 +49,12 @@ pip install -r requirements.txt
 
 1. Create MySQL database:
 ```sql
-CREATE DATABASE studysessionorganizer;
+CREATE DATABASE study_session_organizer;
 ```
 
 2. Import your schema file with tables, procedures, triggers, and functions:
 ```bash
-mysql -u root -p studysessionorganizer < database/schema.sql
+mysql -u root -p study_session_organizer < database/schema.sql
 ```
 
 3. Create `.env` file from template:
@@ -67,7 +67,7 @@ cp .env.example .env
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=your_mysql_password
-DB_NAME=studysessionorganizer
+DB_NAME=study_session_organizer
 SECRET_KEY=your_secret_key_here
 ```
 

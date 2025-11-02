@@ -15,8 +15,8 @@ class Config:
     DB_CONFIG = {
         'host': os.getenv('DB_HOST', 'localhost'),
         'user': os.getenv('DB_USER', 'root'),
-        'password': os.getenv('DB_PASSWORD', ''),
-        'database': os.getenv('DB_NAME', 'studysessionorganizer'),
+        'password': os.getenv('DB_PASSWORD', ''),  # Set your MySQL password here or in .env
+        'database': os.getenv('DB_NAME', 'study_session_organizer'),
         'autocommit': True,
         'raise_on_warnings': True
     }
